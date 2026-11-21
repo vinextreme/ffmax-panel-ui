@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FF Max Panel</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: monospace;
+      padding: 30px;
+      max-width: 400px;
+    }
+    h2 { color: #e55; }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+      font-size: 15px;
+    }
+    input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+    .slider-row {
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    input[type=range] { width: 180px; vertical-align: middle; }
+    .val { color: #e55; font-weight: bold; margin-left: 8px; }
+    button {
+      margin-top: 20px;
+      padding: 10px 32px;
+      background: #e55;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      font-family: monospace;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: #c33; }
+    #status {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #8f8;
+    }
+  </style>
+</head>
+<body>
+  <h2>FF Max Panel</h2>
+
+  <label><input type="checkbox" id="drag_headshot"> Drag Headshot</label>
+  <label><input type="checkbox" id="aim_assist"> Aim Assist</label>
+  <label><input type="checkbox" id="location_esp"> Location ESP</label>
+  <label><input type="checkbox" id="speed_run"> Speed Run</label>
+  <label><input type="checkbox" id="charms"> Charms</label>
+
+  <div class="slider-row">
+    Aim FOV:
+    <input type="range" id="aim_fov" min="10" max="200" value="80">
+    <span class="val" id="fov_val">80</span>
+  </div>
+  <div class="slider-row">
+    Aim Smooth:
+    <input type="range" id="aim_smooth" min="1" max="20" value="5" step="0.5">
+    <span class="val" id="smooth_val">5</span>
+  </div>
+  <div class="slider-row">
+    Speed Multi:
+    <input type="range" id="speed_multi" min="1" max="10" value="2" step="0.1">
+    <span class="val" id="speed_val">2.0</span>
+  </div>
+
+  <button onclick="push()">▶ Push Config</button>
+  <div id="status">not connected</div>
+
+<script>
+  // ← FILL THIS with your Railway URL after deploy
+  const WS_URL = 'wss://YOUR-APP.up.railway.app';
+
+  let ws;
+
+  function connect() {
+    ws = new WebSocket(WS_URL);
+    ws.onopen  = () => document.getElementById('status').textContent = '✅ connected';
+    ws.onclose = () => {
+      document.getElementById('status').textContent = '🔴 disconnected — retrying...';
+      setTimeout(connect, 2000);
+    };
+  }
+  connect();
+
+  document.getElementById('aim_fov').oninput    = e =>
+    document.getElementById('fov_val').textContent    = e.target.value;
+  document.getElementById('aim_smooth').oninput = e =>
+    document.getElementById('smooth_val').textContent = e.target.value;
+  document.getElementById('speed_multi').oninput= e =>
+    document.getElementById('speed_val').textContent  = parseFloat(e.target.value).toFixed(1);
+
+  function push() {
+    if (!ws || ws.readyState !== 1) {
+      document.getElementById('status').textContent = '❌ not connected';
+      return;
+    }
+    const cfg = {
+      type:          'update',
+      drag_headshot: document.getElementById('drag_headshot').checked,
+      aim_assist:    document.getElementById('aim_assist').checked,
+      location_esp:  document.getElementById('location_esp').checked,
+      speed_run:     document.getElementById('speed_run').checked,
+      charms:        document.getElementById('charms').checked,
+      aim_fov:       parseFloat(document.getElementById('aim_fov').value),
+      aim_smooth:    parseFloat(document.getElementById('aim_smooth').value),
+      speed_multi:   parseFloat(document.getElementById('speed_multi').value),
+    };
+    ws.send(JSON.stringify(cfg));
+    document.getElementById('status').textContent = '✅ pushed at ' + new Date().toLocaleTimeString();
+  }
+</script>
+</body>
+</html>
