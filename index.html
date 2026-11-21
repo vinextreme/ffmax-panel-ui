@@ -69,21 +69,23 @@
     <span class="val" id="speed_val">2.0</span>
   </div>
 
-  <button onclick="push()">▶ Push Config</button>
+  <button onclick="push()">&#9654; Push Config</button>
   <div id="status">not connected</div>
 
 <script>
-  // ← FILL THIS with your Railway URL after deploy
-  const WS_URL = 'wss://YOUR-APP.up.railway.app';
+  const WS_URL = 'wss://ffmax-panel-server.onrender.com';
 
   let ws;
 
   function connect() {
     ws = new WebSocket(WS_URL);
-    ws.onopen  = () => document.getElementById('status').textContent = '✅ connected';
+    ws.onopen  = () => document.getElementById('status').textContent = 'connected';
     ws.onclose = () => {
-      document.getElementById('status').textContent = '🔴 disconnected — retrying...';
+      document.getElementById('status').textContent = 'disconnected - retrying...';
       setTimeout(connect, 2000);
+    };
+    ws.onerror = () => {
+      document.getElementById('status').textContent = 'error - retrying...';
     };
   }
   connect();
@@ -97,7 +99,7 @@
 
   function push() {
     if (!ws || ws.readyState !== 1) {
-      document.getElementById('status').textContent = '❌ not connected';
+      document.getElementById('status').textContent = 'not connected';
       return;
     }
     const cfg = {
@@ -112,7 +114,7 @@
       speed_multi:   parseFloat(document.getElementById('speed_multi').value),
     };
     ws.send(JSON.stringify(cfg));
-    document.getElementById('status').textContent = '✅ pushed at ' + new Date().toLocaleTimeString();
+    document.getElementById('status').textContent = 'pushed at ' + new Date().toLocaleTimeString();
   }
 </script>
 </body>
